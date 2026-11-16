@@ -80,4 +80,4 @@ Relevant background includes the **SEAS BP1 earthquake-cycle benchmark**, the sp
 
 ## License and citation
 
-No software license was supplied with the source archive; **no open-source license has been granted by this repository README**. Contact the author about permissions before redistributing or incorporating this work into other software. If you use this research implementation, please credit the repository and identify the specific commit.
+Released under the [MIT License](LICENSE). Copyright (c) 2025 Mohammad Sabah. You are free to use, modify, distribute, and sublicense the software subject to the terms of the license, including retention of the copyright and permission notice. If you use this research implementation in academic work, please credit the repository and identify the specific commit.
