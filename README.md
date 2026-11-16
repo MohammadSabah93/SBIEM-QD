@@ -1,83 +1,76 @@
-# SBIEM-QD: Spectral Boundary-Integral Modeling of Quasi-Dynamic Fault Rupture
+# SBIEM-QD — Spectral Boundary-Integral Analysis and Validation Tools
 
-**Research code for comparing quasi-dynamic (QD) approximations with fully dynamic (FD) elastodynamic fault rupture in the SEAS BP1 benchmark framework.**
+Python research scripts for numerical analysis of fully dynamic (FD) and quasi-dynamic (QD) fault-rupture models, with particular emphasis on **spectral elastodynamic memory**, **rate-and-state friction**, **numerical passivity**, and **earthquake-cycle metrics**.
 
-This repository contains a Python/Numba spectral boundary-integral model for rate-and-state fault slip, alongside scripts for wave-memory approximation, passivity certification, earthquake-cycle analysis, resolution and timing studies, and benchmark comparisons. It is intended as a research implementation, not a packaged or independently validated production simulator.
+The repository collects tools for fitting and assessing relaxation-spectrum representations of wave-mediated fault traction, comparing FD and QD event characteristics, checking single-mode elastodynamic responses, and preparing quantitative research results. Its scientific context includes the SEAS BP1 benchmark and antiplane (mode III) and in-plane (mode II) fault mechanics.
 
-## Scientific scope
+## Research topics
 
-The principal solver, `codes/generate_data/sbiem_bp1.py`, models fault shear traction and slip evolution in a spectral representation. It includes:
+- **Elastodynamic memory approximation:** fitting complex-conjugate relaxation spectra to spectral boundary-integral response functions.
+- **Dissipation and passivity:** analytical and discrete-time checks of the stability and non-energy-generating behavior of reduced memory representations, including exact polynomial methods.
+- **Dynamic rupture comparisons:** measures of rupture speed, peak slip rate, coseismic slip, and arrival-time differences between simulation outputs.
+- **Earthquake cycles and fault segmentation:** event catalogues, recurrence intervals, stress drops, sequence delays, and ensemble statistics.
+- **Verification and performance:** independent single-Fourier-mode checks, execution timing, and preparation of machine-readable supplementary research data.
 
-- **Fully dynamic (FD) reference:** elastodynamic stress transfer with a retarded wave-memory convolution.
-- **Quasi-dynamic (QD) reference:** static elastic stress transfer combined with radiation-damping approximations.
-- **Alternative QD treatments:** conventional constant damping, Lorentz-mapped friction, phase-speed-informed damping, relaxation-based damping, and spectral-memory treatments.
-- **Fault friction:** regularized rate-and-state friction with the aging law.
-- **Benchmark settings:** SEAS BP1 parameters, antiplane (mode III) and in-plane (mode II) configurations, and optional segmented velocity-weakening fault patches.
-- **Time integration:** adaptive slow-phase stepping and small event-phase time steps, with event recording and optional checkpoints.
+## Repository layout
 
-The associated analysis tools explore the accuracy, numerical cost, and stability/passivity of reduced-memory approximations to the FD fault response.
-
-## Repository structure
-
-| Path | Purpose |
+| Script | Purpose |
 | --- | --- |
-| `codes/generate_data/sbiem_bp1.py` | Core SBIEM fault simulator and command-line interface |
-| `codes/generate_data/fit_memory_kernel.py` | Fitting relaxation spectra to the elastodynamic memory kernel |
-| `codes/generate_data/fit_memory_passive.py` | Passivity-constrained memory-kernel fitting |
-| `codes/generate_data/certify_discrete.py` | Continuous and discrete passivity certification |
-| `codes/generate_data/mode_pde_check.py` | Independent single-Fourier-mode elastodynamic check |
-| `codes/generate_data/analysis.py`, `score.py` | Event metrics and FD/QD comparisons |
-| `codes/generate_data/cycle_analysis.py`, `seg_stats.py`, `seg_ensemble.py` | Earthquake-cycle and segmented-fault statistics |
-| `codes/generate_data/memory_remnant.py`, `timing_study.py`, `make_supplement.py` | Memory, performance, and supplementary analyses |
-| `codes/generate_data/launch/` | Original batch-launch scripts and parameter studies |
-| `codes/qd_paths.py` | Portable project-path configuration added for this repository |
-| `data/` | Generated runs, fitted poles, and analysis files (created locally, not version-controlled) |
+| `codes/generate_data/analysis.py` | Shared event loading and rupture metrics |
+| `codes/generate_data/score.py` | Profile-based comparisons between reference and approximate simulations |
+| `codes/generate_data/fit_memory_kernel.py` | Relaxation-spectrum fits to elastodynamic memory kernels |
+| `codes/generate_data/fit_memory_passive.py` | Passivity-constrained memory fitting |
+| `codes/generate_data/certify_discrete.py` | Continuous and discrete passivity certificates |
+| `codes/generate_data/mode_pde_check.py` | Independent plane-strain single-mode time-domain check |
+| `codes/generate_data/cycle_analysis.py` | Earthquake-cycle event catalogues and summary statistics |
+| `codes/generate_data/seg_stats.py` | Segmented-fault event and sequence statistics |
+| `codes/generate_data/seg_ensemble.py` | Ensemble statistics for segmented-fault configurations |
+| `codes/generate_data/memory_remnant.py` | Assessment of residual dynamic memory between nearby events |
+| `codes/generate_data/timing_study.py` | Performance characterization of numerical treatments |
+| `codes/generate_data/make_supplement.py` | Assembly of reproducibility tables and numerical supplements |
+| `codes/qd_paths.py` | Shared, repository-relative output paths |
+| `requirements.txt` | Python dependencies |
 
-## Requirements
+## Python environment
 
-Python 3.10+ is recommended. Install the scientific Python dependencies:
+Python 3.10 or later is recommended. Install the scientific dependencies with:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-The main numerical dependencies are **NumPy**, **SciPy**, and **Numba**. **SymPy** is used for exact-algebra passivity checks. The standalone SBIEM solver does not require PorePy, although some comparison utilities can read results generated by a separate PorePy workflow.
+The project uses NumPy and SciPy for numerical computing, Numba for accelerated numerical kernels, and SymPy for symbolic and exact-arithmetic calculations.
 
-## Getting started
+## Analysis workflows
 
-From the repository root, run a small, short-duration QD example:
+The scripts are organized around computational experiments and their result files. For example, compare an FD event archive with one or more QD event archives:
 
 ```bash
-mkdir -p data/sbiem_runs
-python codes/generate_data/sbiem_bp1.py \
-  --mode qd --treatment standard --dz 200 \
-  --years 0.1 --events 1 \
-  --out data/sbiem_runs/qd_short.npz
+python codes/generate_data/score.py FD.npz QD1.npz QD2.npz
 ```
 
-The example is a **software smoke run**, not a benchmark-quality simulation; a short integration may finish without a seismic event. Result archives (`.npz`) can be inspected with NumPy and the included event-analysis scripts.
+Generate a catalogue of earthquake-cycle events from existing simulation output:
 
-For comparison, switch to `--mode fd` to enable the dynamic reference (substantially more computationally demanding). To explore a memory-based QD approximation without externally fitted coefficients, try `--mode qd --treatment spectral --tjson '{"kind":"pade1"}'`.
+```bash
+python codes/generate_data/cycle_analysis.py run.npz
+```
 
-For the passive fitted spectral models (for example `"kind":"pex5"`), generate the matching pole-coefficient JSON files first with `fit_memory_passive.py`, and store them in `data/memory_poles/`. The source archive **does not include the precomputed memory-pole files or numerical results**.
+Individual scripts contain documentation of their input assumptions, numerical formulations, and generated output paths. Some workflows use previously generated NPZ simulation results and JSON memory-fit coefficients in the `data/` tree; these are experiment-specific inputs.
 
-## Important reproducibility notes
+## Scientific use
 
-1. The supplied launch scripts were written for a specific compute environment and contain hard-coded working directories (for example `/workdir/porepy/paper_QD_imitating_FD`). Adapt them to your local clone before executing; some start many high-cost jobs in parallel.
-2. Several analysis scripts assume precomputed `.npz` simulations and fitted `.json` files are present under `data/`. Those datasets are not included in the submitted archive.
-3. Source files have been checked for Python syntax. Full scientific regressions, convergence studies, and result reproduction have **not** been independently completed as part of this upload.
-4. The code follows the provided research source. The added `qd_paths.py` provides paths and creates output directories but does not alter the numerical formulation.
+These scripts are intended for research, numerical-method assessment, and quantitative comparison of fault-rupture models. Scientific results should be evaluated using appropriate convergence tests, validation data, and explicitly documented numerical settings.
 
-## Methods and background
+## Author
 
-Relevant background includes the **SEAS BP1 earthquake-cycle benchmark**, the spectral boundary-integral framework for elastodynamic rupture, and regularized rate-and-state friction. The code's module-level documentation gives further equations, numerical choices, and references.
-
-## Author and contact
-
-**Mohammad Sabah, PhD** — computational geomechanics, reservoir/fault modeling, and injection-induced seismicity.
+**Mohammad Sabah, PhD** — computational geomechanics, fault mechanics, and induced seismicity.
 
 [GitHub profile](https://github.com/MohammadSabah93) · [ORCID](https://orcid.org/0000-0002-7260-6138)
 
-## License and citation
+## License
 
-Released under the [MIT License](LICENSE). Copyright (c) 2025 Mohammad Sabah. You are free to use, modify, distribute, and sublicense the software subject to the terms of the license, including retention of the copyright and permission notice. If you use this research implementation in academic work, please credit the repository and identify the specific commit.
+Released under the [MIT License](LICENSE).
+
+Copyright (c) 2025 Mohammad Sabah.
+
+For academic use, please cite this repository and identify the commit corresponding to the version used.
