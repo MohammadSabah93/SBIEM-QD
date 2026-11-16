@@ -1,0 +1,5 @@
+# Core numerical simulation and scientific analysis
+numpy
+scipy
+numba
+sympy
